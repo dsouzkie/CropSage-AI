@@ -112,8 +112,9 @@ RULES:
         response = llm.invoke(messages)
         return response.content
     except Exception as e:
-        if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
-            logger.warning("Gemini API rate limit exceeded. Falling back to Local AI Synthesis.")
+        error_msg = str(e).upper()
+        if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg or "503" in error_msg or "UNAVAILABLE" in error_msg:
+            logger.warning(f"Gemini API offline ({e}). Falling back to Local AI Synthesis.")
             # Graceful Fallback Mode: Parse the JSON and build a markdown response manually
             try:
                 db_info = json.loads(disease_data)
