@@ -1,0 +1,39 @@
+# Environment variables
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.egg
+venv/
+.venv/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Model files (use Git LFS for these)
+*.h5
+*.tflite
+*.pb
+*.onnx
+saved_model/
+
+# Dataset (too large for git)
+dataset/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log

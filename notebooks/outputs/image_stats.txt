@@ -1,0 +1,4 @@
+=== Image Dimension Statistics ===
+Resolution 256x256: 108606 images
+
+Total corrupted images found: 0
