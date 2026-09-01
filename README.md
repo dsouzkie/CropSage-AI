@@ -1,64 +1,83 @@
-# 🌿 CropSage — Agentic AI Smart Farming System
+# 🌿 CropSage AI
+**Advanced Agritech Crop Disease Diagnostic & Management System**
 
-**Crop Disease Detection & Agricultural Productivity Enhancement**
+CropSage AI is an end-to-end Machine Learning and Agentic AI platform designed to assist farmers in rapidly diagnosing plant diseases and generating highly localized, actionable treatment plans. 
 
-> An agentic AI-powered system that detects crop diseases from leaf images using deep learning (MobileNetV2) and provides intelligent, context-aware farming recommendations through a multi-step reasoning AI agent.
+This repository contains the complete source code for model training, the LangChain AI agent pipeline, and the live Streamlit cloud deployment.
 
-## Features
+---
 
-- 🔬 **Disease Detection** — Upload a leaf photo, get instant diagnosis (38 diseases across 14 crops)
-- 🤖 **Agentic AI Recommendations** — Multi-step reasoning agent provides treatments, fertilizers, irrigation advice
-- 🌦️ **Weather-Aware** — Considers local weather for contextual recommendations
-- 📱 **Mobile-Friendly** — Works on any phone browser with camera access
-- 💰 **100% Free** — No paid APIs or hosting
+## 🌟 Key Features
+* **Real-Time Computer Vision:** Uses a lightweight PyTorch MobileNetV2 architecture to classify 38 different crop diseases with high accuracy.
+* **Agentic AI Agronomist:** Integrates Google's Gemini 3.6 Flash LLM to act as a virtual agronomist. The AI dynamically reads disease classification outputs and cross-references them with an internal agronomy database.
+* **Live Weather Integration:** Pulls live meteorological data via the OpenWeatherMap API. The AI actively factors in real-time wind speed, temperature, and humidity to determine if it is safe to spray chemical fungicides (preventing spray drift).
+* **Offline Graceful Degradation:** A custom-built Fallback Synthesizer ensures that if cloud API rate limits are exhausted, the app seamlessly falls back to a local offline database without crashing, ensuring 100% uptime.
+* **Premium Dashboard:** A custom-styled Dark Mode UI featuring Plotly Speedometer Confidence Gauges, Neumorphic Metric Cards, and PDF Treatment Plan exports.
 
-## Tech Stack
+---
 
-| Component | Technology |
-|---|---|
-| ML Model | MobileNetV2 (Transfer Learning) |
-| Agent | LangChain + Google Gemini 2.0 Flash |
-| Frontend | Streamlit |
-| Hosting | Hugging Face Spaces |
-| Dataset | PlantVillage (54,305 images, 38 classes) |
+## 🏗️ System Architecture & Tech Stack
+* **Deep Learning Framework:** PyTorch & Torchvision (CUDA-accelerated)
+* **Model Architecture:** MobileNetV2 (Transfer Learning)
+* **Large Language Model:** Google Gemini 3.6 Flash
+* **Agentic Framework:** LangChain (Custom 1-Shot Prompting Pipeline)
+* **Web Frontend:** Streamlit (Custom CSS injected)
+* **Data Visualization:** Plotly & FPDF2
+* **Deployment:** GitHub & Streamlit Community Cloud
 
-## Quick Start
+---
 
-```bash
-# Clone the repo
-git clone <repo-url>
-cd FYP
+## 📈 Implementation Methodology
 
-# Create virtual environment
-python -m venv venv
-venv\Scripts\activate  # Windows
+The project was executed in 5 distinct phases:
 
-# Install dependencies
-pip install -r requirements.txt
+### Phase 1: Data Preparation & EDA
+* Utilized the **PlantVillage dataset** (Color variant to retain maximum spatial and color features, actively avoiding grayscale/segmented domain shifts).
+* Performed exploratory data analysis to verify class balances and implemented PyTorch data augmentations (RandomResizedCrop, ColorJitter, RandomHorizontalFlip).
 
-# Set up environment variables
-cp .env.example .env
-# Edit .env with your API keys
+### Phase 2: Model Training
+* Swapped out the initial TensorFlow implementation for native **PyTorch** to leverage local RTX 4070 CUDA acceleration.
+* Fine-tuned a pre-trained `MobileNetV2` model over a 2-phase training loop (frozen base layers, followed by unfrozen fine-tuning).
+* Achieved **>98% validation accuracy** on the PlantVillage test split.
 
-# Run the app
-streamlit run app/app.py
-```
+### Phase 3: Agentic AI Knowledge Base
+* Constructed `knowledge_base.json`, mapping all 38 biological classes to exact organic/chemical treatments and causal pathogens.
+* Engineered a prompt pipeline forcing the AI to output its Chain-of-Thought (`<thinking>`) prior to giving advice, increasing logical consistency regarding weather constraints.
 
-## Project Structure
+### Phase 4: Web Application Development
+* Built a robust Streamlit UI featuring interactive file uploads, memory-enabled chatbot interfaces, and automated PDF report generation.
+* Implemented regex parsing to cleanly separate AI thought processes from user-facing advice.
 
-```
-FYP/
-├── app/                    # Main Streamlit application
-│   ├── app.py              # Entry point
-│   ├── model/              # Trained model + class indices
-│   ├── agent/              # Agentic AI (LangChain + tools)
-│   └── utils/              # Image processing, visualization
-├── notebooks/              # Training & EDA notebooks
-├── dataset/                # PlantVillage dataset (not in git)
-├── requirements.txt
-└── README.md
-```
+### Phase 5: Cloud Deployment
+* Handled large model weights (`.pth`) via Git LFS.
+* Deployed the full stack onto Streamlit Community Cloud with encrypted environment secrets.
 
-## License
+---
 
-This project is for academic purposes (Final Year Project).
+## 🚧 Engineering Challenges Overcome
+
+Throughout the development lifecycle, several major engineering hurdles were solved:
+
+1. **Framework Incompatibility:** TensorFlow ≥2.11 dropped native Windows GPU support. The entire Deep Learning pipeline was rapidly migrated to PyTorch, securing local CUDA support.
+2. **LLM Rate Limiting (HTTP 429):** Free-tier API keys were quickly exhausted by traditional ReAct agent loops. **Solution:** Ripped out the multi-step LangChain ReAct loop and engineered a highly optimized 1-Shot Prompt framework (saving 75% quota per click), backed by a custom Offline Fallback Synthesizer.
+3. **Streamlit Infinite Auto-Retry Loop:** Handled a bug where Streamlit would endlessly spam the API upon encountering an error by manually popping failed states from `st.session_state`.
+4. **State/Module Caching Corruption:** Solved phantom `ModuleNotFoundError` issues triggered by Streamlit's aggressive `sys.modules` hot-reload caching by executing hard server reboots.
+5. **PDF Unicode Encoding Crashes:** `fpdf2` crashed when attempting to render Unicode emojis (🌱, 🛡️) generated by the AI. **Solution:** Engineered a `.encode('latin-1', 'ignore')` sanitizer pipeline prior to PDF rendering.
+6. **Bytearray UI Crashes:** Streamlit's download button rejected modern `fpdf2` bytearray outputs. Explicitly cast data types to raw `bytes()` to satisfy the UI renderer.
+7. **AI Token Truncation:** The LLM's deep `<thinking>` process routinely hit the 1,000 max token limit, cutting off the closing `</thinking>` tag and corrupting the UI. **Solution:** Removed artificial token limits and built a robust regex parser capable of handling missing closing tags gracefully.
+
+---
+
+## 🔮 Limitations & Future Work
+
+### 1. Domain Shift & Generalization
+Currently, the model is highly accurate on the PlantVillage dataset but struggles with **Out-of-Distribution (OOD)** real-world images from the internet (e.g., misclassifying a messy Google image of Tomato Mosaic as Grape Esca). 
+
+Because the model was trained exclusively on laboratory-style images with uniform backgrounds, the CNN's filters latch onto "Spurious Correlations" (like lighting or background noise).
+
+**Future Solution:** 
+Implement **Dataset Mixing (Domain Generalization)**. Future iterations should blend the PlantVillage baseline with real-world, noisy datasets like *PlantDoc*. Furthermore, advanced PyTorch augmentations like *CutMix* or *MixUp* should be introduced to artificially paste diseased leaves onto random field backgrounds, forcing the neural network to ignore the background and focus entirely on the leaf pathology.
+
+### 2. Multi-Leaf Detection
+The current pipeline assumes a single, centered leaf per image. 
+**Future Solution:** Integrate an object detection architecture (like YOLOv10) prior to the classification step, allowing the app to scan an entire canopy photo, draw bounding boxes around multiple leaves, and classify them individually.
