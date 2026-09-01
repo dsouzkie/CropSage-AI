@@ -77,7 +77,7 @@ RULES:
 3. After the <thinking> block, you MUST structure your final response to the user with EXACTLY these Markdown headings:
    - ### 🔬 Disease Overview: Briefly explain what this disease is, what plant it affects, and what pathogen/conditions cause it.
    - ### 🛡️ Immediate Treatment Plan: Provide actionable steps (factor in the organic constraint).
-   - ### 🌍 Location-Specific Prevention: Provide preventive measures specifically tailored to the user's current location and the provided weather conditions.
+   - ### 🌍 Location-Specific Prevention: First, explicitly state the current climate/weather details. Then, recommend preventive measures and explain EXACTLY *why* they are necessary based on these specific weather conditions.
 4. If Organic Only is True, do NOT suggest chemical treatments in your final plan.
 5. Do not mention your 'context data' to the user in the final output. Just give the advice naturally.
 """
